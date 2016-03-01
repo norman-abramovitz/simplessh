@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
 )
 
 const DefaultTimeout = 30 * time.Second
@@ -70,6 +71,21 @@ func ConnectWithKeyTimeout(host, username, privKey string, timeout time.Duration
 // Connect with a private key. If username is empty simplessh will attempt to get the current user.
 func ConnectWithKey(host, username, privKey string) (*Client, error) {
 	return ConnectWithKeyTimeout(host, username, privKey, DefaultTimeout)
+}
+
+// Connect with a ssh agent with a custom timeout. If username is empty simplessh will attempt to get the current user.
+func ConnectWithSshAgentTimeout(host, username string, timeout time.Duration) (*Client, error) {
+	sshAgent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+	if err != nil {
+		return nil, err
+	}
+	authMethod := ssh.PublicKeysCallback(agent.NewClient(sshAgent).Signers)
+	return connect(username, host, authMethod, timeout)
+}
+
+// Connect with a ssh agent. If username is empty simplessh will attempt to get the current user.
+func ConnectWithSshAgent(host, username string) (*Client, error) {
+	return ConnectWithSshAgentTimeout(host, username, DefaultTimeout)
 }
 
 func connect(username, host string, authMethod ssh.AuthMethod, timeout time.Duration) (*Client, error) {
