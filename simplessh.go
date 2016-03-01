@@ -1,6 +1,7 @@
 package simplessh
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -119,7 +120,7 @@ func connect(username, host string, authMethod ssh.AuthMethod, timeout time.Dura
 	return c, nil
 }
 
-// Execute cmd on the remote host and return stderr and stdout
+// Execute cmd on the remote host and return stderr and stdout combined
 func (c *Client) Exec(cmd string) ([]byte, error) {
 	session, err := c.SSHClient.NewSession()
 	if err != nil {
@@ -128,6 +129,24 @@ func (c *Client) Exec(cmd string) ([]byte, error) {
 	defer session.Close()
 
 	return session.CombinedOutput(cmd)
+}
+
+// Execute cmd on the remote host and return stderr and stdout as separte streams
+func (c *Client) ExecWithOutputStreams(cmd string) ([]byte, []byte, error) {
+	session, err := c.SSHClient.NewSession()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer session.Close()
+
+	var stdout, stderr bytes.Buffer
+
+	session.Stdout = &stdout
+	session.Stderr = &stderr
+
+	err = session.Run(cmd)
+
+	return stdout.Bytes(), stderr.Bytes(), err
 }
 
 func (c *Client) Download(remote, local string) error {
