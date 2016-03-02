@@ -1,6 +1,6 @@
 /*
-A simple abstraction around ssh and sftp libraries in go.  This package extends sfreiberg's simplessh
-to include ssh-agent support and separate output steams for command execution.
+	A simple abstraction around ssh and sftp libraries in go that extends sfreiberg's simplessh
+	package to include ssh-agent support and separate output steams for command execution.
 */
 package simplessh
 
